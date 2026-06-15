@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body { background-color: #0b0f17; color: #f1f5f9; font-family: 'Inter', sans-serif; }
+      /* Animasi Efek Laser Scanning */
+      @keyframes scan {
+        0% { top: 0%; }
+        50% { top: 100%; }
+        100% { top: 0%; }
+      }
+      .scanner-line {
+        animation: scan 3s linear infinite;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen p-4 md:p-6 bg-[#0b0f17]">
+
+    <header class="flex justify-between items-center pb-6 mb-6 border-b border-slate-800">
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <span>✨</span> ELEVATE AI
+        </h1>
+        <p class="text-[11px] md:text-xs text-slate-400">Holistic Posture & Energy Intelligence — Project Ichal Haq</p>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold text-emerald-400">
+        ● LIVE GAS ENVIRONMENT
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <div class="space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Kontrol Pemindaian</h3>
+          
+          <button id="startBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer text-sm">
+            Mulai Kamera Real-Time
+          </button>
+          
+          <button id="scanBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-sm">
+            Mulai Analisis Postur (AI Scan)
+          </button>
+
+          <button id="stopBtn" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-xs">
+            Matikan Kamera
+          </button>
+          
+          <p class="text-[11px] text-slate-500 mt-3 text-center">Aplikasi menggunakan kamera lokal secara aman tanpa mengirim data gambar ke server luar.</p>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Kolaborasi Spesifikasi</h3>
+          <div class="p-3 bg-slate-950 border-l-2 border-emerald-500 rounded-r-xl">
+            <p class="text-xs font-bold text-emerald-400 mb-1">ICHAL HAQ COLLABORATION</p>
+            <p class="text-xs text-slate-400 leading-relaxed">Menghubungkan kecerdasan biometrik, keselarasan batin spiritual, dan transformasi gaya pria modern.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[320px] bg-slate-950">
+            <span id="placeholderText" class="text-slate-500 text-sm z-10">Kamera Belum Aktif</span>
+            
+            <video id="inputVideo" class="absolute w-full h-full object-cover opacity-60 rounded-xl hidden" autoplay playsinline muted></video>
+            
+            <div id="laserLine" class="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-[0_0_10px_#10b981] scanner-line hidden z-20"></div>
+            
+            <div id="targetBox" class="absolute w-48 h-64 border-2 border-dashed border-emerald-500/40 rounded-xl hidden z-10 animate-pulse"></div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <span class="text-xs text-slate-400 uppercase tracking-wider">Skor Keselarasan Postur</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="scoreDisplay" class="text-4xl font-extrabold text-slate-600">--%</span>
+                <span id="statusDisplay" class="text-xs font-medium text-slate-400">Kamera Standby</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-2 mt-3">
+                <div id="progressBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-700" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>👔</span> Panduan Busana (Ichal Haq Spec)
+              </h3>
+              <p id="fashionAdvice" class="text-xs text-slate-400 leading-relaxed">Silakan aktifkan kamera, berdiri tegak di dalam kotak target, lalu tekan tombol "Mulai Analisis Postur".</p>
+              
+              <hr class="border-slate-800 my-2">
+              
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>🔮</span> Proyeksi Frekuensi Aura
+              </h3>
+              <p id="auraAdvice" class="text-xs text-slate-400 leading-relaxed">Analisis aura dan keselarasan energi internal tubuh pria akan muncul secara holistik bersamaan dengan hasil pemindaian.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      const video = document.getElementById('inputVideo');
+      const placeholder = document.getElementById('placeholderText');
+      const laserLine = document.getElementById('laserLine');
+      const targetBox = document.getElementById('targetBox');
+      
+      const startBtn = document.getElementById('startBtn');
+      const scanBtn = document.getElementById('scanBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      
+      const scoreDisplay = document.getElementById('scoreDisplay');
+      const statusDisplay = document.getElementById('statusDisplay');
+      const progressBar = document.getElementById('progressBar');
+      const fashionAdvice = document.getElementById('fashionAdvice');
+      const auraAdvice = document.getElementById('auraAdvice');
+
+      let streamInstance = null;
+
+      // Kumpulan Database Rekomendasi Gaya & Aura untuk Demo Dinamis
+      const demoData = [
+        {
+          score: 94,
+          status: "STRUKTUR SIMETRIS SEMPURNA",
+          fashion: "<strong>Rekomendasi Gaya:</strong> Struktur tubuh sangat tegap. Sangat mewah untuk konsep <em>Old Money Aesthetic</em>. Gunakan kemeja berbahan linen premium tanpa mengancingkan bagian kerah atas, padukan dengan celana bahan <em>ankle-pants</em> dan loafer kulit cokelat.",
+          aura: "<strong>Analisis Aura:</strong> Pancaran energi wibawa (Alpha Charisma) sangat kuat dan dominan. Keseimbangan titik tumpu pundak mencerminkan ketenangan pikiran yang matang di depan publik."
+        },
+        {
+          score: 82,
+          status: "BUTUH PENYELARASAN LAYER (TILT)",
+          fashion: "<strong>Rekomendasi Gaya:</strong> Terdeteksi kemiringan minor pada asimetri bahu kanan. Sangat disarankan mengaplikasikan teknik <em>Layering Taktis</em> khas Ichal Haq. Padukan kaos polos dengan luaran kaku seperti Jaket Denim terstruktur atau kemeja flanel tebal sebagai outer.",
+          aura: "<strong>Analisis Aura:</strong> Terbaca adanya indikasi ketegangan otot akibat tingkat kelelahan aktivitas atau stres sirkulasi energi yang tersumbat di area tulang selangka. Disarankan melatih teknik pernapasan perut."
+        }
+      ];
+
+      let toggleDemo = 0;
+
+      // 1. Fungsi Mengaktifkan Kamera Lokal (Lolos Proteksi CSP)
+      startBtn.addEventListener('click', async () => {
+        try {
+          placeholder.innerText = "Membuka Izin Akses Kamera...";
+          
+          const constraints = {
+            video: { width: 640, height: 480, facingMode: "user" },
+            audio: false
+          };
+          
+          streamInstance = await navigator.mediaDevices.getUserMedia(constraints);
+          video.srcObject = streamInstance;
+          
+          // Tampilkan Elemen Kamera
+          video.classList.remove('hidden');
+          targetBox.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          
+          // Manajemen Tombol
+          startBtn.classList.add('hidden');
+          scanBtn.classList.remove('hidden');
+          stopBtn.classList.remove('hidden');
+          
+          statusDisplay.innerText = "Target Siap Dipindai";
+          statusDisplay.className = "text-xs font-bold text-blue-400";
+        } catch (err) {
+          console.error("Gagal Mengakses Kamera: ", err);
+          placeholder.innerText = "Gagal mengakses kamera. Pastikan izin kamera di browser Anda diatur ke 'Allow'.";
+          statusDisplay.innerText = "Error Kamera";
+        }
+      });
+
+      // 2. Fungsi Animasi AI Pemindaian & Pemrosesan Data Otomatis
+      scanBtn.addEventListener('click', () => {
+        scanBtn.disabled = true;
+        scanBtn.innerText = "Sedang Membaca Matriks...";
+        laserLine.classList.remove('hidden');
+        
+        scoreDisplay.innerText = "--%";
+        scoreDisplay.className = "text-4xl font-extrabold text-amber-500 animate-pulse";
+        statusDisplay.innerText = "AI SEDANG MENGANALISIS TUBUH...";
+        statusDisplay.className = "text-xs font-bold text-amber-400 animate-pulse";
+        
+        // Simulasi Waktu Komputasi AI selama 2.5 Detik
+        setTimeout(() => {
+          // Ambil data dari database tiruan secara bergantian untuk kebutuhan demo klien
+          const currentResult = demoData[toggleDemo];
+          toggleDemo = (toggleDemo + 1) % demoData.length; // ganti data pada scan berikutnya
+          
+          // Perbarui Tampilan Metrik Score
+          scoreDisplay.innerText = currentResult.score + "%";
+          scoreDisplay.className = "text-4xl font-extrabold text-emerald-400";
+          progressBar.style.width = currentResult.score + "%";
+          
+          statusDisplay.innerText = currentResult.status;
+          statusDisplay.className = (currentResult.score > 90) ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
+          
+          // Tampilkan Teks Output Gaya & Aura secara Berkelas
+          fashionAdvice.innerHTML = currentResult.fashion;
+          auraAdvice.innerHTML = currentResult.aura;
+          
+          // Selesai Scanning
+          laserLine.classList.add('hidden');
+          scanBtn.disabled = false;
+          scanBtn.innerText = "Mulai Analisis Ulang";
+        }, 2500);
+      });
+
+      // 3. Fungsi Mematikan Kamera
+      stopBtn.addEventListener('click', () => {
+        if (streamInstance) {
+          streamInstance.getTracks().forEach(track => track.stop());
+        }
+        
+        // Sembunyikan dan reset elemen ke default
+        video.classList.add('hidden');
+        targetBox.classList.add('hidden');
+        laserLine.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        placeholder.innerText = "Kamera Nonaktif";
+        
+        startBtn.classList.remove('hidden');
+        scanBtn.classList.add('hidden');
+        stopBtn.classList.add('hidden');
+        
+        scoreDisplay.innerText = "--%";
+        scoreDisplay.className = "text-4xl font-extrabold text-slate-600";
+        progressBar.style.width = "0%";
+        statusDisplay.innerText = "Kamera Standby";
+        statusDisplay.className = "text-xs font-medium text-slate-400";
+        fashionAdvice.innerText = "Silakan aktifkan kamera, berdiri tegak di dalam kotak target, lalu tekan tombol 'Mulai Analisis Postur'.";
+        auraAdvice.innerText = "Analisis aura dan keselarasan energi internal tubuh pria akan muncul secara holistik bersamaan dengan hasil pemindaian.";
+      });
+    </script>
+  </body>
+</html>
