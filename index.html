@@ -2,6 +2,7 @@
 <html>
   <head>
     <base target="_top">
+    <!-- Tailwind CSS yang Kompatibel dengan Sandbox GAS & Vercel -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body { background-color: #0b0f17; color: #f1f5f9; font-family: 'Inter', sans-serif; }
@@ -18,6 +19,7 @@
   </head>
   <body class="min-h-screen p-4 md:p-6 bg-[#0b0f17]">
 
+    <!-- NAVBAR UTAMA -->
     <header class="flex justify-between items-center pb-6 mb-6 border-b border-slate-800">
       <div>
         <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -26,25 +28,32 @@
         <p class="text-[11px] md:text-xs text-slate-400">Holistic Posture & Energy Intelligence — Project Ichal Haq</p>
       </div>
       <div class="bg-slate-900 border border-slate-800 px-3 py-1 rounded-full text-[10px] md:text-xs font-semibold text-emerald-400">
-        ● LIVE GAS ENVIRONMENT
+        ● LIVE ENVIRONMENT
       </div>
     </header>
 
+    <!-- GRID UTAMA -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
+      <!-- SIDEBAR KONTROL -->
       <div class="space-y-6">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
           <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Kontrol Pemindaian</h3>
           
           <button id="startBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3 px-4 rounded-xl transition duration-200 shadow-lg shadow-emerald-900/20 cursor-pointer text-sm">
-            Mulai Kamera Real-Time
+            Mulai Kamera (Depan)
           </button>
           
           <button id="scanBtn" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-medium py-3 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-sm">
             Mulai Analisis Postur (AI Scan)
           </button>
 
-          <button id="stopBtn" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-xs">
+          <!-- TOMBOL BARU: SWITCH CAMERA -->
+          <button id="switchBtn" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-medium py-2 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-xs flex items-center justify-center gap-1">
+            🔄 Ganti Kamera (Depan/Belakang)
+          </button>
+
+          <button id="stopBtn" class="w-full mt-4 bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-900/30 font-medium py-2 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-xs">
             Matikan Kamera
           </button>
           
@@ -60,19 +69,25 @@
         </div>
       </div>
 
+      <!-- AREA VIDEO & CANVAS (TENGAH & KANAN) -->
       <div class="lg:col-span-2 space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
+          <!-- Viewport Kamera Terintegrasi Overlay -->
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[320px] bg-slate-950">
             <span id="placeholderText" class="text-slate-500 text-sm z-10">Kamera Belum Aktif</span>
             
+            <!-- Elemen Video Utama -->
             <video id="inputVideo" class="absolute w-full h-full object-cover opacity-60 rounded-xl hidden" autoplay playsinline muted></video>
             
+            <!-- Overlay Animasi Scanning Laser Line -->
             <div id="laserLine" class="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-[0_0_10px_#10b981] scanner-line hidden z-20"></div>
             
+            <!-- Overlay Matriks Target Visual (Simulasi Face/Body Bounding Box) -->
             <div id="targetBox" class="absolute w-48 h-64 border-2 border-dashed border-emerald-500/40 rounded-xl hidden z-10 animate-pulse"></div>
           </div>
 
+          <!-- PANEL ANALISIS METRIK -->
           <div class="space-y-4">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
               <span class="text-xs text-slate-400 uppercase tracking-wider">Skor Keselarasan Postur</span>
@@ -85,6 +100,7 @@
               </div>
             </div>
 
+            <!-- Rekomendasi Otomatis -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
                 <span>👔</span> Panduan Busana (Ichal Haq Spec)
@@ -105,6 +121,7 @@
 
     </div>
 
+    <!-- LOGIKA JAVASCRIPT FIXED FOR MOBILE -->
     <script>
       const video = document.getElementById('inputVideo');
       const placeholder = document.getElementById('placeholderText');
@@ -113,6 +130,7 @@
       
       const startBtn = document.getElementById('startBtn');
       const scanBtn = document.getElementById('scanBtn');
+      const switchBtn = document.getElementById('switchBtn');
       const stopBtn = document.getElementById('stopBtn');
       
       const scoreDisplay = document.getElementById('scoreDisplay');
@@ -122,8 +140,8 @@
       const auraAdvice = document.getElementById('auraAdvice');
 
       let streamInstance = null;
+      let currentFacingMode = "user"; // "user" = Kamera Depan, "environment" = Kamera Belakang
 
-      // Kumpulan Database Rekomendasi Gaya & Aura untuk Demo Dinamis
       const demoData = [
         {
           score: 94,
@@ -141,39 +159,58 @@
 
       let toggleDemo = 0;
 
-      // 1. Fungsi Mengaktifkan Kamera Lokal (Lolos Proteksi CSP)
-      startBtn.addEventListener('click', async () => {
+      // Fungsi Utama Membuka Kamera dengan Pilihan Jalur Fleksibel (Ideal)
+      async function initCamera() {
+        // Matikan stream aktif sebelum menyalakan yang baru (proses switch)
+        if (streamInstance) {
+          streamInstance.getTracks().forEach(track => track.stop());
+        }
+
         try {
-          placeholder.innerText = "Membuka Izin Akses Kamera...";
+          placeholder.innerText = "Menghubungkan Kamera AI...";
           
+          // PERBAIKAN UTAMA: Menggunakan metode 'ideal' agar tidak ditolak oleh hardware smartphone
           const constraints = {
-            video: { width: 640, height: 480, facingMode: "user" },
+            video: { 
+              facingMode: { ideal: currentFacingMode },
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            },
             audio: false
           };
           
           streamInstance = await navigator.mediaDevices.getUserMedia(constraints);
           video.srcObject = streamInstance;
           
-          // Tampilkan Elemen Kamera
           video.classList.remove('hidden');
           targetBox.classList.remove('hidden');
           placeholder.classList.add('hidden');
           
-          // Manajemen Tombol
           startBtn.classList.add('hidden');
           scanBtn.classList.remove('hidden');
+          switchBtn.classList.remove('hidden');
           stopBtn.classList.remove('hidden');
           
-          statusDisplay.innerText = "Target Siap Dipindai";
+          statusDisplay.innerText = `Kamera ${currentFacingMode === 'user' ? 'Depan' : 'Belakang'} Aktif`;
           statusDisplay.className = "text-xs font-bold text-blue-400";
         } catch (err) {
-          console.error("Gagal Mengakses Kamera: ", err);
-          placeholder.innerText = "Gagal mengakses kamera. Pastikan izin kamera di browser Anda diatur ke 'Allow'.";
-          statusDisplay.innerText = "Error Kamera";
+          console.error("Gagal Akses Kamera: ", err);
+          placeholder.innerText = "Kamera gagal dimuat. Pastikan izin kamera aktif.";
+          statusDisplay.innerText = "Error Hardware";
         }
+      }
+
+      // Handler Tombol Mulai
+      startBtn.addEventListener('click', initCamera);
+
+      // Handler Tombol Ganti Kamera (Switch Camera)
+      switchBtn.addEventListener('click', () => {
+        // Tukar mode kamera
+        currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+        initCamera();
       });
 
-      // 2. Fungsi Animasi AI Pemindaian & Pemrosesan Data Otomatis
+      // Handler Tombol Jalankan Scan AI Animation
       scanBtn.addEventListener('click', () => {
         scanBtn.disabled = true;
         scanBtn.innerText = "Sedang Membaca Matriks...";
@@ -184,13 +221,10 @@
         statusDisplay.innerText = "AI SEDANG MENGANALISIS TUBUH...";
         statusDisplay.className = "text-xs font-bold text-amber-400 animate-pulse";
         
-        // Simulasi Waktu Komputasi AI selama 2.5 Detik
         setTimeout(() => {
-          // Ambil data dari database tiruan secara bergantian untuk kebutuhan demo klien
           const currentResult = demoData[toggleDemo];
-          toggleDemo = (toggleDemo + 1) % demoData.length; // ganti data pada scan berikutnya
+          toggleDemo = (toggleDemo + 1) % demoData.length;
           
-          // Perbarui Tampilan Metrik Score
           scoreDisplay.innerText = currentResult.score + "%";
           scoreDisplay.className = "text-4xl font-extrabold text-emerald-400";
           progressBar.style.width = currentResult.score + "%";
@@ -198,24 +232,21 @@
           statusDisplay.innerText = currentResult.status;
           statusDisplay.className = (currentResult.score > 90) ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
           
-          // Tampilkan Teks Output Gaya & Aura secara Berkelas
           fashionAdvice.innerHTML = currentResult.fashion;
           auraAdvice.innerHTML = currentResult.aura;
           
-          // Selesai Scanning
           laserLine.classList.add('hidden');
           scanBtn.disabled = false;
           scanBtn.innerText = "Mulai Analisis Ulang";
         }, 2500);
       });
 
-      // 3. Fungsi Mematikan Kamera
+      // Handler Tombol Matikan Kamera
       stopBtn.addEventListener('click', () => {
         if (streamInstance) {
           streamInstance.getTracks().forEach(track => track.stop());
         }
         
-        // Sembunyikan dan reset elemen ke default
         video.classList.add('hidden');
         targetBox.classList.add('hidden');
         laserLine.classList.add('hidden');
@@ -224,6 +255,7 @@
         
         startBtn.classList.remove('hidden');
         scanBtn.classList.add('hidden');
+        switchBtn.classList.add('hidden');
         stopBtn.classList.add('hidden');
         
         scoreDisplay.innerText = "--%";
