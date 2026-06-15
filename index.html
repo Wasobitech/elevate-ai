@@ -48,7 +48,7 @@
             Mulai Analisis Postur (AI Scan)
           </button>
 
-          <!-- TOMBOL BARU: SWITCH CAMERA -->
+          <!-- TOMBOL SWITCH CAMERA -->
           <button id="switchBtn" class="w-full mt-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 font-medium py-2 px-4 rounded-xl transition duration-200 hidden cursor-pointer text-xs flex items-center justify-center gap-1">
             🔄 Ganti Kamera (Depan/Belakang)
           </button>
@@ -69,21 +69,15 @@
         </div>
       </div>
 
-      <!-- AREA VIDEO & CANVAS (TENGAH & KANAN) -->
+      <!-- AREA VIDEO & CANVAS -->
       <div class="lg:col-span-2 space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          <!-- Viewport Kamera Terintegrasi Overlay -->
+          <!-- Viewport Kamera -->
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[320px] bg-slate-950">
             <span id="placeholderText" class="text-slate-500 text-sm z-10">Kamera Belum Aktif</span>
-            
-            <!-- Elemen Video Utama -->
             <video id="inputVideo" class="absolute w-full h-full object-cover opacity-60 rounded-xl hidden" autoplay playsinline muted></video>
-            
-            <!-- Overlay Animasi Scanning Laser Line -->
             <div id="laserLine" class="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-[0_0_10px_#10b981] scanner-line hidden z-20"></div>
-            
-            <!-- Overlay Matriks Target Visual (Simulasi Face/Body Bounding Box) -->
             <div id="targetBox" class="absolute w-48 h-64 border-2 border-dashed border-emerald-500/40 rounded-xl hidden z-10 animate-pulse"></div>
           </div>
 
@@ -121,7 +115,7 @@
 
     </div>
 
-    <!-- LOGIKA JAVASCRIPT FIXED FOR MOBILE -->
+    <!-- LOGIKA JAVASCRIPT FIXED FOR DYNAMIC RICH SUGGESTIONS -->
     <script>
       const video = document.getElementById('inputVideo');
       const placeholder = document.getElementById('placeholderText');
@@ -140,36 +134,49 @@
       const auraAdvice = document.getElementById('auraAdvice');
 
       let streamInstance = null;
-      let currentFacingMode = "user"; // "user" = Kamera Depan, "environment" = Kamera Belakang
+      let currentFacingMode = "user"; 
 
-      const demoData = [
+      // DATABASE GAYA YANG JAUH LEBIH KAYA & MENDALAM (5 ARCHETYPES)
+      const richStyleDatabase = [
         {
-          score: 94,
-          status: "STRUKTUR SIMETRIS SEMPURNA",
-          fashion: "<strong>Rekomendasi Gaya:</strong> Struktur tubuh sangat tegap. Sangat mewah untuk konsep <em>Old Money Aesthetic</em>. Gunakan kemeja berbahan linen premium tanpa mengancingkan bagian kerah atas, padukan dengan celana bahan <em>ankle-pants</em> dan loafer kulit cokelat.",
-          aura: "<strong>Analisis Aura:</strong> Pancaran energi wibawa (Alpha Charisma) sangat kuat dan dominan. Keseimbangan titik tumpu pundak mencerminkan ketenangan pikiran yang matang di depan publik."
+          scoreRange: [94, 98],
+          status: "STRUKTUR SYMMETRICAL EXCELLENT",
+          fashion: "<strong>Gaya: Old Money Minimalist.</strong> Struktur bahu tegak lurus sempurna. Sangat direkomendasikan memakai <em>Knit Polo</em> rajutan bertekstur warna sand/broken white, dipadukan dengan celana bahan potongan Tapered-fit abu-abu, dan sepatu kulit Loafer cokelat tanpa kaus kaki terlihat. Hindari pakaian grafis besar agar kemapanan fisik menonjol.",
+          aura: "<strong>Proyeksi Batin:</strong> Energi Wibawa Emas (Alpha Presence). Keseimbangan simetri ini merefleksikan fokus mental yang tajam, kestabilan emosi yang matang, dan daya tarik kepemimpinan yang tinggi."
         },
         {
-          score: 82,
-          status: "BUTUH PENYELARASAN LAYER (TILT)",
-          fashion: "<strong>Rekomendasi Gaya:</strong> Terdeteksi kemiringan minor pada asimetri bahu kanan. Sangat disarankan mengaplikasikan teknik <em>Layering Taktis</em> khas Ichal Haq. Padukan kaos polos dengan luaran kaku seperti Jaket Denim terstruktur atau kemeja flanel tebal sebagai outer.",
-          aura: "<strong>Analisis Aura:</strong> Terbaca adanya indikasi ketegangan otot akibat tingkat kelelahan aktivitas atau stres sirkulasi energi yang tersumbat di area tulang selangka. Disarankan melatih teknik pernapasan perut."
+          scoreRange: [88, 93],
+          status: "POSTUR PROPOSIONAL URBAN-URBAN",
+          fashion: "<strong>Gaya: Smart Casual Modern.</strong> Garis tubuh ideal untuk siluet semi-formal. Aplikasikan paduan Kaos Polos Premium katun berat (Heavyweight Tee) putih sebagai base, dibalut dengan <em>Unstructured Blazer</em> hitam atau navy tanpa bantalan busa bahu. Sempurnakan dengan celana Chino khakis dan Sneakers putih bersih.",
+          aura: "<strong>Proyeksi Batin:</strong> Energi Kreativitas Perak (Magnetic Vibe). Postur dinamis ini memancarkan aura keramahan, keterbukaan komunikasi, dan fleksibilitas beradaptasi di lingkungan sosial."
+        },
+        {
+          scoreRange: [84, 87],
+          status: "DEVIASI KEMIRINGAN MINOR (LEFT SKEW)",
+          fashion: "<strong>Gaya: Earth-Tone Tonal Layering.</strong> Terdeteksi sedikit kemiringan tumpuan pada bahu kiri. Gunakan teknik <em>Tonal Layering</em> taktis untuk menyamarkan sudut. Padukan kemeja overshirt linen tebal warna Sage Green yang dibiarkan terbuka, dengan inner singlet/kaos abu-abu. Bawahan celana kargo potongan slim warna olive.",
+          aura: "<strong>Proyeksi Batin:</strong> Energi Ketenangan Hijau (Grounded Energy). Sisi kiri tubuh memproses intuisi. Kemiringan ini menandakan Anda sedang memikul beban keputusan emosional. Busana warna bumi akan menstabilkan sirkulasi batin Anda."
+        },
+        {
+          scoreRange: [79, 83],
+          status: "DEVIASI KEMIRINGAN MINOR (RIGHT SKEW)",
+          fashion: "<strong>Gaya: Street-Wear Drop Shoulder.</strong> Terdeteksi kompensasi tumpuan berat di bahu kanan (asimetri sedang). Samarkan sepenuhnya kontur pundak dengan baju potongan <em>Drop-Shoulder Crewneck</em> atau Hoodie rajut berukuran oversized dengan bahan jatuh yang tebal. Padukan dengan celana jans potongan lurus (Straight Cut).",
+          aura: "<strong>Proyeksi Batin:</strong> Energi Produktivitas Jingga (Action-Driven). Bahu kanan dominan memproses logika dan kerja keras fisik. Struktur ini mengindikasikan kelelahan kerja tingkat tinggi. Gaya kasual longgar membantu melepas beban mental."
+        },
+        {
+          scoreRange: [73, 78],
+          status: "SUDUT BAHU RELAXED / LEAN BACK",
+          fashion: "<strong>Gaya: Japanese Clean Boy Look.</strong> Struktur leher dan pundak cenderung rileks/sedikit membungkuk ke depan. Ciptakan ilusi tubuh kokoh berdimensi menggunakan kemeja flanel bermotif kotak-kotak (*tartan*) berkerah tegak, atau jaket kaku berbahan koduro (*corduroy/denim*). Gunakan celana model *Loose-fit* bersiluet lebar.",
+          aura: "<strong>Proyeksi Batin:</strong> Energi Reflektif Biru (Deep Thinker). Postur cenderung menekuk ke dalam menandakan karakter tertutup, pemikir dalam, atau sedang menutup diri dari lingkungan sekitar. Pakaian berkerah tegas membantu menaikkan rasa percaya diri instan."
         }
       ];
 
-      let toggleDemo = 0;
-
-      // Fungsi Utama Membuka Kamera dengan Pilihan Jalur Fleksibel (Ideal)
       async function initCamera() {
-        // Matikan stream aktif sebelum menyalakan yang baru (proses switch)
         if (streamInstance) {
           streamInstance.getTracks().forEach(track => track.stop());
         }
 
         try {
           placeholder.innerText = "Menghubungkan Kamera AI...";
-          
-          // PERBAIKAN UTAMA: Menggunakan metode 'ideal' agar tidak ditolak oleh hardware smartphone
           const constraints = {
             video: { 
               facingMode: { ideal: currentFacingMode },
@@ -194,23 +201,18 @@
           statusDisplay.innerText = `Kamera ${currentFacingMode === 'user' ? 'Depan' : 'Belakang'} Aktif`;
           statusDisplay.className = "text-xs font-bold text-blue-400";
         } catch (err) {
-          console.error("Gagal Akses Kamera: ", err);
-          placeholder.innerText = "Kamera gagal dimuat. Pastikan izin kamera aktif.";
-          statusDisplay.innerText = "Error Hardware";
+          console.error(err);
+          placeholder.innerText = "Kamera gagal dimuat.";
         }
       }
 
-      // Handler Tombol Mulai
       startBtn.addEventListener('click', initCamera);
-
-      // Handler Tombol Ganti Kamera (Switch Camera)
       switchBtn.addEventListener('click', () => {
-        // Tukar mode kamera
         currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
         initCamera();
       });
 
-      // Handler Tombol Jalankan Scan AI Animation
+      // LOGIKA BARU: MEMILIH ACAK SECARA PROFESIONAL (RANDOMIZED AI SELECTION)
       scanBtn.addEventListener('click', () => {
         scanBtn.disabled = true;
         scanBtn.innerText = "Sedang Membaca Matriks...";
@@ -222,18 +224,25 @@
         statusDisplay.className = "text-xs font-bold text-amber-400 animate-pulse";
         
         setTimeout(() => {
-          const currentResult = demoData[toggleDemo];
-          toggleDemo = (toggleDemo + 1) % demoData.length;
+          // 1. Pilih secara acak dari 5 tipe gaya yang ada di database
+          const randomIndex = Math.floor(Math.random() * richStyleDatabase.length);
+          const pickedData = richStyleDatabase[randomIndex];
           
-          scoreDisplay.innerText = currentResult.score + "%";
+          // 2. Buat skor acak yang berada di dalam rentang tipe gaya tersebut agar sinkron
+          const minScore = pickedData.scoreRange[0];
+          const maxScore = pickedData.scoreRange[1];
+          const finalRandomScore = Math.floor(Math.random() * (maxScore - minScore + 1)) + minScore;
+          
+          // 3. Tampilkan hasil yang kaya dan tidak monoton ke layar UI
+          scoreDisplay.innerText = finalRandomScore + "%";
           scoreDisplay.className = "text-4xl font-extrabold text-emerald-400";
-          progressBar.style.width = currentResult.score + "%";
+          progressBar.style.width = finalRandomScore + "%";
           
-          statusDisplay.innerText = currentResult.status;
-          statusDisplay.className = (currentResult.score > 90) ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
+          statusDisplay.innerText = pickedData.status;
+          statusDisplay.className = (finalRandomScore > 87) ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-amber-400";
           
-          fashionAdvice.innerHTML = currentResult.fashion;
-          auraAdvice.innerHTML = currentResult.aura;
+          fashionAdvice.innerHTML = pickedData.fashion;
+          auraAdvice.innerHTML = pickedData.aura;
           
           laserLine.classList.add('hidden');
           scanBtn.disabled = false;
@@ -241,12 +250,10 @@
         }, 2500);
       });
 
-      // Handler Tombol Matikan Kamera
       stopBtn.addEventListener('click', () => {
         if (streamInstance) {
           streamInstance.getTracks().forEach(track => track.stop());
         }
-        
         video.classList.add('hidden');
         targetBox.classList.add('hidden');
         laserLine.classList.add('hidden');
@@ -262,7 +269,6 @@
         scoreDisplay.className = "text-4xl font-extrabold text-slate-600";
         progressBar.style.width = "0%";
         statusDisplay.innerText = "Kamera Standby";
-        statusDisplay.className = "text-xs font-medium text-slate-400";
         fashionAdvice.innerText = "Silakan aktifkan kamera, berdiri tegak di dalam kotak target, lalu tekan tombol 'Mulai Analisis Postur'.";
         auraAdvice.innerText = "Analisis aura dan keselarasan energi internal tubuh pria akan muncul secara holistik bersamaan dengan hasil pemindaian.";
       });
